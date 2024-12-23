@@ -1,101 +1,93 @@
-import Image from "next/image";
+// app/(home)/page.tsx  (la carpeta "(home)" es opcional, la pongo solo como ejemplo)
+import React from 'react';
+import Pagination from './components/Pagination'; // Adjust the path as necessary
 
-export default function Home() {
+// Interfaz para cada personaje
+interface Character {
+  id: number;
+  name: string;
+  race: string;
+  gender: string;
+  image: string;
+  // ... cualquier otro campo que uses
+}
+
+// Estructura de la respuesta de la API
+interface CharactersResponse {
+  items: Character[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+  links: {
+    next?: string;     // puede que sea string o null/ vacío
+    previous?: string; // igual, puede no existir
+  };
+}
+
+async function getCharacters(page: number): Promise<CharactersResponse> {
+  const res = await fetch(`https://dragonball-api.com/api/characters?page=${page}&limit=16`, {
+    // puedes usar 'no-cache' o 'no-store' si quieres siempre la versión fresca
+    // next: { revalidate: 0 }
+  });
+  if (!res.ok) {
+    throw new Error('Error al obtener datos de la API de Dragon Ball');
+  }
+  const result: CharactersResponse = await res.json();
+
+  // result.items (array de personajes)
+  // result.meta (info de paginación)
+  // result.links (links a siguiente, anterior, etc.)
+  return result;
+}
+
+// El componente de página recibe los "searchParams" (en App Router)
+export default async function Home({
+  searchParams
+}: {
+  searchParams?: { page?: string };
+}) {
+  // Obtenemos la página actual (si no viene, usamos 1)
+  const currentPage = Number(searchParams?.page) || 1;
+
+  // Llamamos a la función que trae personajes y meta
+  const { items: data, meta } = await getCharacters(currentPage);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main style={{ padding: '1rem' }}>
+      <h1>Dragon Ball Characters</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      {/* Cuadrícula de 12 personajes (o menos, si la API devuelte menos de 12) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
+        {data.map((char) => (
+          <div
+            key={char.id}
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              padding: '1rem'
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <img
+              src={char.image}
+              alt={char.name}
+              style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            <h2>{char.name}</h2>
+            <p>Género: {char.gender}</p>
+            <p>Raza: {char.race}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Zona de paginación */}
+      <Pagination
+        currentPage={meta.currentPage}
+        totalPages={meta.totalPages}
+      />
+    </main>
   );
 }
