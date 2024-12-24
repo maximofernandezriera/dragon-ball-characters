@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export",
-    "deploy": "next build && next export && touch out/.nojekyll && git add out && git commit -m 'Deploy to GitHub Pages' && git push origin main"
+    "deploy": "next build && touch out/.nojekyll && git add out && git commit -m 'Deploy to GitHub Pages' && git push origin main"
   },
   "dependencies": {
     "next": "15.1.2",

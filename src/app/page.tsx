@@ -1,4 +1,7 @@
-import React from 'react';
+"use client"; 
+
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Pagination from './components/Pagination'; // Ajusta la ruta según sea necesario
 
 interface Character {
@@ -32,19 +35,27 @@ async function getCharacters(page: number): Promise<CharactersResponse> {
   return res.json();
 }
 
-interface PageProps {
-  searchParams: Promise<{ page?: string } | undefined>; 
-}
-
-const Home: React.FC<PageProps> = async ({ searchParams }) => {
-  const params = await searchParams; // Resuelve la promesa
-  const pageParam = params ? params.page : undefined;
+const CharactersList: React.FC = () => {
+  const searchParams = useSearchParams();
+  const pageParam = searchParams.get('page');
   const currentPage = Number(pageParam) || 1;
 
-  const data = await getCharacters(currentPage);
+  const [data, setData] = React.useState<CharactersResponse | null>(null);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const data = await getCharacters(currentPage);
+      setData(data);
+    };
+    fetchData();
+  }, [currentPage]);
+
+  if (!data) {
+    return <div>Cargando...</div>;
+  }
 
   return (
-    <main>
+    <>
       <h1>Dragon Ball Characters</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
         {data.items.map((char) => (
@@ -68,7 +79,15 @@ const Home: React.FC<PageProps> = async ({ searchParams }) => {
         ))}
       </div>
       <Pagination currentPage={data.meta.currentPage} totalPages={data.meta.totalPages} />
-    </main>
+    </>
+  );
+};
+
+const Home: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <CharactersList />
+    </Suspense>
   );
 };
 
